@@ -9,8 +9,8 @@ import org.junit.Test;
 
 public class NotifierTest {
     SmsConnector smsConnector = mock(SmsConnector.class);
-    TwitterApi twitterApi = mock(TwitterApi.class);
-    Notifier notifier = new Notifier(smsConnector, twitterApi);
+    EmailApi emailApi = mock(EmailApi.class);
+    Notifier notifier = new Notifier(smsConnector, emailApi);
     
 
     @Test public void 
@@ -18,7 +18,7 @@ public class NotifierTest {
         notifier.notify("");
         
         verifyZeroInteractions(smsConnector );
-        verifyZeroInteractions(twitterApi);
+        verifyZeroInteractions(emailApi);
     }
     
     @Test(expected=UnsupportedProtocol.class) public void 
@@ -35,6 +35,18 @@ public class NotifierTest {
         String phone = "00654321012234";
         notifier.notify(protocol + Notifier.SEPARATOR + phone + Notifier.SEPARATOR + "Bonjour");
         verify(smsConnector).send(phone, "Bonjour");
+    }
+
+    @Test public void 
+    sends_emails_to_email_api() throws Exception {
+        String protocol = "email";
+        String address = "me@my.home";
+        String subject = "Whats new?";
+        String messageBody = "Hi, how are you? What have you been up to?";
+        notifier.notify(protocol + Notifier.SEPARATOR + 
+                address + Notifier.SEPARATOR + 
+                subject + Notifier.SEPARATOR + messageBody);
+        verify(emailApi).email(address, subject, messageBody);
     }
 
 }
