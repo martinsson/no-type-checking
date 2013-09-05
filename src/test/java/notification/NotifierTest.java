@@ -34,7 +34,7 @@ public class NotifierTest {
         String protocol = "mobile";
         String phone = "00654321012234";
         notifier.notify(protocol + Notifier.SEPARATOR + phone + Notifier.SEPARATOR + "Bonjour");
-//        verify(smsConnector).send(phone, "Bonjour");
+        verify(smsConnector).send(phone, "Bonjour");
     }
 
 }
