@@ -1,8 +1,10 @@
 package notification;
 
+
 public class Notifier {
 
     public static final String SEPARATOR = ":";
+    private static final Logger LOGGER = new Logger();
     private SmsConnector smsConnector;
     private EmailApi emailApi;
 
@@ -12,15 +14,42 @@ public class Notifier {
     }
 
     public void notify(String message) throws UnsupportedProtocol {
-        if (message.isEmpty())
-            return;
         String[] split = message.split(SEPARATOR);
-        if (split[0].equals("mobile")) {
-            smsConnector.send(split[1], split[2]);
-        } else if (split[0].equals("email")) {
-            emailApi.email(split[1], split[2], split[3]);
+        if (message.isEmpty()) {
+            return;
+        }
+
+        AbstractMessage msg = makeMessage(message, split);
+        LOGGER.log("received message " + message.toString());
+        
+        if (msg instanceof MobileMessage) {
+            MobileMessage mobileMessage = (MobileMessage) msg;
+            handleMobileMessage(mobileMessage);
+            
+        } else if (msg instanceof EmailMessage) {
+            EmailMessage emailMessage = (EmailMessage) msg;
+            handleEmailMessage(emailMessage);
+        } 
+    }
+
+    private void handleEmailMessage(EmailMessage emailMessage) {
+        emailApi.email(emailMessage.getAddress(), emailMessage.getSubject(), emailMessage.getBody());
+    }
+
+    private void handleMobileMessage(MobileMessage mobileMessage) {
+        smsConnector.send(mobileMessage.getAddress(), mobileMessage.getText());
+    }
+
+    private AbstractMessage makeMessage(String message, String[] split) throws UnsupportedProtocol {
+        AbstractMessage msg;
+        String protocol = split[0];
+        if (protocol.equals("mobile")) {
+            msg = new MobileMessage(message);
+        } else if (protocol.equals("email")) {
+            msg = new EmailMessage(message);
         } else
             throw new UnsupportedProtocol(message);
+        return msg;
     }
 
     @SuppressWarnings("serial")
